@@ -21,21 +21,32 @@ defined( 'ABSPATH' ) or die();
  */
 class Subthree_Link {
 
-	/**
-	 * The target screen_ids.
-	 *
-	 * @var array
-	 */
-	public $screen_ids = [];
+	/** @var array The target screen_ids. */
+	private $screen_ids = [];
+	/** @var self */
+	private static $instance;
 
 	/**
 	 * construct function
 	 *
 	 * @return void
 	 */
-	function __construct() {
-		add_action( 'admin_init', array( $this, 'get_target_screens' ), 10 );
-		add_action( 'admin_init', array( $this, 'add_views_filter' ), 11 );
+	private function __construct() {
+		add_action( 'admin_init', [ $this, 'get_target_screens' ], 10 );
+		add_action( 'admin_init', [ $this, 'add_views_filter' ], 11 );
+	}
+
+	/**
+	 * Singleton
+	 *
+	 * @return Subthree_Link
+	 */
+	public static function get_instance() {
+		if (self::$instance === null) {
+			self::$instance = new self();
+		}
+
+		return self::$instance;
 	}
 
 	/**
@@ -44,8 +55,8 @@ class Subthree_Link {
 	 * @access public
 	 * @return void
 	 */
-	function get_target_screens() {
-		$post_types = get_post_types( array( 'public' => true ) );
+	public function get_target_screens() {
+		$post_types = get_post_types( [ 'public' => true ] );
 		foreach( $post_types as $post_type ) {
 			$this->screen_ids[] = 'edit-' . $post_type;
 		}
@@ -58,9 +69,9 @@ class Subthree_Link {
 	 * @access public
 	 * @return void
 	 */
-	function add_views_filter() {
+	public function add_views_filter() {
 		foreach( $this->screen_ids as $screen_id ) {
-			add_filter( 'views_' . $screen_id, array( $this, 'views_screen' ) );
+			add_filter( 'views_' . $screen_id, [ $this, 'views_screen' ] );
 		}
 	}
 
@@ -71,7 +82,7 @@ class Subthree_Link {
 	 * @param array $views 
 	 * @return array $views
 	 */
-	function views_screen( $views ) {
+	public function views_screen( $views ) {
 		foreach( $views as $class => $view ) {
 			$views[$class] = $this->change_view_link( $view, $class );
 		}
@@ -87,7 +98,7 @@ class Subthree_Link {
 	 * @param string $class 
 	 * @return string $view
 	 */
-	function change_view_link( $view, $class ) {
+	public function change_view_link( $view, $class ) {
 		$keys = [
 			'orderby',
 			'order',
@@ -121,4 +132,4 @@ class Subthree_Link {
 	}
 }
 
-new Subthree_Link();
+Subthree_Link::get_instance();
